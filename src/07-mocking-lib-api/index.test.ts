@@ -1,17 +1,44 @@
 // Uncomment the code below and write your tests
-/* import axios from 'axios';
-import { throttledGetDataFromApi } from './index'; */
+import axios from 'axios';
+import { THROTTLE_TIME, throttledGetDataFromApi } from './index';
+
+const baseURL = 'https://jsonplaceholder.typicode.com';
+const path = 'test/';
+const response = { data: 'text' };
 
 describe('throttledGetDataFromApi', () => {
+  let axiosGetSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
+  beforeEach(() => {
+    axiosGetSpy = jest
+      .spyOn(axios.Axios.prototype, 'get')
+      .mockResolvedValueOnce({ data: response });
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   test('should create instance with provided base url', async () => {
-    // Write your test here
+    const axiosCreateSpy = jest.spyOn(axios, 'create');
+
+    throttledGetDataFromApi(path);
+    expect(axiosCreateSpy).toBeCalledTimes(1);
+    expect(axiosCreateSpy).toBeCalledWith({ baseURL });
   });
 
   test('should perform request to correct provided url', async () => {
-    // Write your test here
+    throttledGetDataFromApi(path);
+    jest.advanceTimersByTime(THROTTLE_TIME);
+    expect(axiosGetSpy).toBeCalledTimes(1);
+    expect(axiosGetSpy).toBeCalledWith(path);
   });
 
   test('should return response data', async () => {
-    // Write your test here
+    expect(await throttledGetDataFromApi(path)).toStrictEqual(response);
   });
 });
